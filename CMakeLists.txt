@@ -1,0 +1,81 @@
+# Copyright (c) Alpaca Core
+# SPDX-License-Identifier: MIT
+#
+cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
+
+project(ac-imgui-sdl
+    VERSION 1.0.0
+    DESCRIPTION "Alpaca Core CMake wrapper of Dear ImGui and SDL"
+    LANGUAGES CXX
+)
+
+# cpm
+include(./get_cpm.cmake)
+
+#######################################
+# cmake lib
+CPMAddPackage(gh:iboB/icm@1.5.4)
+
+list(APPEND CMAKE_MODULE_PATH
+    "${icm_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+)
+
+include(icm_dev_mode)
+include(icm_add_lib)
+
+#######################################
+# options
+
+option(AC_IMGUI_SDL_REQUIRED "${PROJECT_NAME}: require that the library is available" ${ICM_DEV_MODE})
+option(AC_IMGUI_SDL_BUILD_EXAMPLES "${PROJECT_NAME}: build examples" ${ICM_DEV_MODE})
+
+#######################################
+# packages
+
+find_package(SDL2)
+if(NOT SDL2_FOUND)
+    if(AC_IMGUI_SDL_REQUIRED)
+        message(FATAL_ERROR "${PROJECT_NAME}: Could not find SDL")
+    else()
+        message(STATUS "${CMAKE_PROJECT_NAME}: SDL was not found. ImGui examples will be unavailable")
+        return()
+    endif()
+endif()
+
+CPMAddPackage(gh:iboB/splat@1.3.3) # for SYMBOL_EXPORT
+CPMAddPackage(gh:ocornut/imgui@1.90.9)
+
+#######################################
+# targets
+
+icm_add_lib(imgui IMGUI
+    ${imgui_SOURCE_DIR}/imgui.cpp
+    ${imgui_SOURCE_DIR}/imgui_demo.cpp
+    ${imgui_SOURCE_DIR}/imgui_draw.cpp
+    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+    ${imgui_SOURCE_DIR}/imgui_tables.cpp
+    ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl2.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer2.cpp
+)
+target_include_directories(imgui
+    PUBLIC
+        ${imgui_SOURCE_DIR}
+    INTERFACE
+        ${imgui_SOURCE_DIR}/backends
+        ${imgui_SOURCE_DIR}/misc/cpp
+)
+target_link_libraries(imgui
+    INTERFACE
+        SDL2::SDL2main
+    PUBLIC
+        splat::splat
+        SDL2::SDL2
+)
+target_compile_definitions(imgui PUBLIC IMGUI_USER_CONFIG="${CMAKE_CURRENT_SOURCE_DIR}/imgui_userconfig.h")
+add_library(ac-dev::imgui ALIAS imgui)
+
+if(AC_IMGUI_SDL_BUILD_EXAMPLES)
+    # add_subdirectory(example)
+endif()
