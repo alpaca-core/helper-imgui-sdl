@@ -51,7 +51,7 @@ CPMAddPackage(gh:ocornut/imgui@1.90.9)
 #######################################
 # targets
 
-icm_add_lib(imgui IMGUI
+icm_add_lib(imgui-sdl IMGUI
     ${imgui_SOURCE_DIR}/imgui.cpp
     ${imgui_SOURCE_DIR}/imgui_demo.cpp
     ${imgui_SOURCE_DIR}/imgui_draw.cpp
@@ -61,14 +61,14 @@ icm_add_lib(imgui IMGUI
     ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl2.cpp
     ${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer2.cpp
 )
-target_include_directories(imgui
+target_include_directories(imgui-sdl
     PUBLIC
         ${imgui_SOURCE_DIR}
     INTERFACE
         ${imgui_SOURCE_DIR}/backends
         ${imgui_SOURCE_DIR}/misc/cpp
 )
-target_link_libraries(imgui
+target_link_libraries(imgui-sdl
     INTERFACE
         SDL2::SDL2main
     PUBLIC
@@ -84,9 +84,14 @@ endif()
 
 configure_file(imgui_userconfig.in.h imgui_userconfig.h @ONLY)
 
-target_compile_definitions(imgui PUBLIC IMGUI_USER_CONFIG="${CMAKE_CURRENT_BINARY_DIR}/imgui_userconfig.h")
-add_library(ac-dev::imgui ALIAS imgui)
+target_compile_definitions(imgui-sdl PUBLIC IMGUI_USER_CONFIG="${CMAKE_CURRENT_BINARY_DIR}/imgui_userconfig.h")
+add_library(ac-dev::imgui-sdl ALIAS imgui-sdl)
+
+add_library(imgui-sdl-app INTERFACE)
+add_library(ac-dev::imgui-sdl-app ALIAS imgui-sdl-app)
+target_include_directories(imgui-sdl-app INTERFACE app)
+target_link_libraries(imgui-sdl-app INTERFACE imgui-sdl)
 
 if(AC_IMGUI_SDL_BUILD_EXAMPLES)
-    # add_subdirectory(example)
+    add_subdirectory(example)
 endif()
