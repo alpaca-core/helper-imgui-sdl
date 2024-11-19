@@ -30,6 +30,8 @@ include(icm_add_lib)
 option(AC_IMGUI_SDL_REQUIRED "${PROJECT_NAME}: require that the library is available" ${ICM_DEV_MODE})
 option(AC_IMGUI_SDL_BUILD_EXAMPLES "${PROJECT_NAME}: build examples" ${ICM_DEV_MODE})
 
+option(AC_IMGUI_SDL_ENABLE_DEMO_WINDOWS "${PROJECT_NAME}: enable ImGui demo windows" ${ICM_DEV_MODE})
+
 #######################################
 # packages
 
@@ -73,7 +75,16 @@ target_link_libraries(imgui
         splat::splat
         SDL2::SDL2
 )
-target_compile_definitions(imgui PUBLIC IMGUI_USER_CONFIG="${CMAKE_CURRENT_SOURCE_DIR}/imgui_userconfig.h")
+
+if(AC_IMGUI_SDL_ENABLE_DEMO_WINDOWS)
+    set(IMGUI_DISABLE_DEMO_WINDOWS OFF)
+else()
+    set(IMGUI_DISABLE_DEMO_WINDOWS ON)
+endif()
+
+configure_file(imgui_userconfig.in.h imgui_userconfig.h @ONLY)
+
+target_compile_definitions(imgui PUBLIC IMGUI_USER_CONFIG="${CMAKE_CURRENT_BINARY_DIR}/imgui_userconfig.h")
 add_library(ac-dev::imgui ALIAS imgui)
 
 if(AC_IMGUI_SDL_BUILD_EXAMPLES)
